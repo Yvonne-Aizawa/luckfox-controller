@@ -184,8 +184,12 @@ static int setup_gadget(void) {
     char *udc = get_udc_name();
     if (!udc) return -1;
 
-    printf("Binding to UDC: %s\n", udc);
+    /* First, unbind from UDC if already bound (prevents "Device or resource busy") */
     snprintf(path, sizeof(path), "%s/%s/UDC", CONFIGFS_PATH, GADGET_NAME);
+    write_file(path, "");  /* Ignore errors - might not be bound yet */
+    usleep(100000);  /* Wait 100ms for unbind to complete */
+
+    printf("Binding to UDC: %s\n", udc);
     if (write_file(path, udc) < 0) return -1;
 
     printf("USB gadget setup complete!\n");

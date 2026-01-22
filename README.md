@@ -101,6 +101,11 @@ The simple demo mode runs a pre-programmed sequence:
 sudo ./switch_controller
 ```
 
+If you get "Device or resource busy" error, first run:
+```bash
+sudo ./cleanup.sh
+```
+
 This will:
 1. Set up the USB gadget
 2. Connect to the Switch (plug in USB cable)
@@ -282,6 +287,24 @@ Byte 7:   Vendor specific
 ```
 
 ## Troubleshooting
+
+### Device or Resource Busy
+
+If you see "Failed to write to UDC: Device or resource busy":
+
+This means the USB Device Controller is already in use. Fix it by running:
+
+```bash
+sudo ./cleanup.sh
+```
+
+Or manually unbind all gadgets:
+
+```bash
+echo "" > /sys/kernel/config/usb_gadget/*/UDC
+```
+
+The programs now automatically unbind before binding, but if you're switching between different gadgets or had a crash, you may need to run cleanup first.
 
 ### No UDC Found
 
