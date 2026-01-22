@@ -2,6 +2,29 @@
 
 This project implements a Nintendo Switch Pro Controller emulator using Linux USB Gadget (ConfigFS) on the Luckfox Pico Max. It allows the Luckfox device to appear as a HORI POKKEN Controller when connected to a Nintendo Switch via USB.
 
+## Quick Start
+
+**The Switch powers the Luckfox via USB.** For the best experience:
+
+```bash
+# 1. Build the programs
+make
+
+# 2. Install as a service (runs automatically at boot)
+sudo ./install_service.sh
+
+# 3. Plug the Luckfox into your Switch
+#    - The Luckfox will boot up
+#    - The controller will start automatically
+#    - The Switch will recognize it as a controller
+
+# 4. (Optional) Control the virtual controller via socket API
+./client_example
+# Or: echo "BTN 0004" | nc -U /tmp/switch_controller.sock
+```
+
+That's it! The controller is now ready to use.
+
 ## Features
 
 - **Full USB HID Controller Emulation** - Emulates a licensed HORI POKKEN Controller (VID: 0x0F0D, PID: 0x0092)
@@ -93,10 +116,48 @@ sudo ./setup.sh
 
 ## Usage
 
-### Demo Mode
+### Important: Power Considerations
 
-The simple demo mode runs a pre-programmed sequence:
+**The Switch powers the Luckfox board via USB.** This means:
+- The Luckfox won't boot until connected to the Switch
+- For best results, install the controller as a service that runs automatically at boot
+- When you plug the Luckfox into the Switch, it will boot up and automatically start the controller
 
+### Option 1: Auto-Start Service (Recommended)
+
+Install the controller to run automatically at boot:
+
+```bash
+# Build the programs first
+make
+
+# Install as a service
+sudo ./install_service.sh
+```
+
+Now, whenever you plug the Luckfox into your Switch:
+1. The Luckfox boots up (powered by Switch)
+2. The controller service starts automatically
+3. The Switch recognizes the controller
+4. Ready to use!
+
+To manually control the service:
+```bash
+sudo /etc/init.d/switch_controller start   # Start
+sudo /etc/init.d/switch_controller stop    # Stop
+sudo /etc/init.d/switch_controller status  # Check status
+```
+
+To uninstall:
+```bash
+sudo ./uninstall_service.sh
+```
+
+### Option 2: Manual Mode (Testing/Development)
+
+For testing or if you have the Luckfox powered separately:
+
+**Demo Mode:**
 ```bash
 sudo ./switch_controller
 ```
@@ -106,20 +167,17 @@ If you get "Device or resource busy" error, first run:
 sudo ./cleanup.sh
 ```
 
-This will:
-1. Set up the USB gadget
-2. Wait for you to connect the USB cable to the Switch
-3. Automatically press buttons and move sticks in a demo pattern
-4. Press Ctrl+C to stop
+**Important:** Since the Switch powers the board, this manual mode is mainly useful for:
+- Testing with a separate power source
+- Development and debugging
+- Running on battery power if available
 
-**Important:** The program will wait for the Switch to connect before starting the demo. Make sure to plug in the USB cable when prompted!
-
-### API Mode (Recommended)
+### Option 3: API Mode (Manual/Advanced)
 
 The API mode allows external programs to control the virtual controller:
 
 ```bash
-# Start the controller API server
+# Start the controller API server (if not using the service)
 sudo ./switch_controller_api
 
 # In another terminal, use the example client
@@ -128,6 +186,17 @@ sudo ./switch_controller_api
 # Or send commands manually
 echo "BTN 0004" | nc -U /tmp/switch_controller.sock  # Press A button
 echo "RESET" | nc -U /tmp/switch_controller.sock     # Reset to neutral
+```
+
+**Note:** The installed service uses API mode by default, so you can control it via the socket even when running as a service.
+
+To control the service-based controller:
+```bash
+# The socket is available at /tmp/switch_controller.sock
+./client_example
+
+# Or use shell commands
+echo "BTN 0004" | nc -U /tmp/switch_controller.sock
 ```
 
 ## API Commands
@@ -292,12 +361,17 @@ Byte 7:   Vendor specific
 
 ### "Cannot send after transport endpoint shutdown"
 
-This error means the USB host (Switch) hasn't connected yet. The programs now automatically wait for the connection, so you should see a "Waiting for USB host..." message. Simply plug in the USB cable to your Switch when prompted.
+This error means the USB host (Switch) hasn't connected yet or has disconnected.
 
-If you see this error while the program is running:
-- The Switch may have been disconnected or put to sleep
+**If running manually:**
+The program will show a "Waiting for USB host..." message and wait for connection. However, since the Switch powers the Luckfox, you should consider using the auto-start service instead (see Usage section).
+
+**If using the service:**
+This is usually handled automatically during boot. If you see this in logs:
+- Check that the USB cable is securely connected
+- The Switch may have been put to sleep
 - Try unplugging and re-plugging the USB cable
-- Restart the program
+- Check service status: `sudo /etc/init.d/switch_controller status`
 
 ### Device or Resource Busy
 
