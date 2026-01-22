@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Setup script for Switch Controller Emulator on Luckfox Pico Max
 #
@@ -10,7 +10,7 @@ echo "================================="
 echo
 
 # Check if running as root
-if [ "$EUID" -ne 0 ]; then
+if [ "$(id -u)" -ne 0 ]; then
     echo "Please run as root (use sudo)"
     exit 1
 fi

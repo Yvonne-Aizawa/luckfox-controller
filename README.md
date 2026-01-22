@@ -184,8 +184,8 @@ send_command("STICK 128 128 128 128")  # Center
 
 ### Shell Script
 
-```bash
-#!/bin/bash
+```sh
+#!/bin/sh
 
 press_button() {
     echo "BTN $1" | nc -U /tmp/switch_controller.sock
@@ -195,8 +195,10 @@ press_button() {
 }
 
 # Press A button 5 times
-for i in {1..5}; do
+i=1
+while [ $i -le 5 ]; do
     press_button 0004
+    i=$((i + 1))
 done
 ```
 
