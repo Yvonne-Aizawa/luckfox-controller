@@ -1,0 +1,28 @@
+# Compiled binaries
+switch_controller
+switch_controller_api
+client_example
+*.o
+*.a
+*.so
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Build artifacts
+*.d
+*.out
+
+# macOS
+.DS_Store
+
+# Linux
+*.ko
+*.mod.c
+.tmp_versions/
+modules.order
+Module.symvers
