@@ -254,11 +254,51 @@ static int send_report(const switch_input_report_t *report) {
 
     ssize_t written = write(hidg_fd, report, SWITCH_INPUT_REPORT_SIZE);
     if (written != SWITCH_INPUT_REPORT_SIZE) {
-        fprintf(stderr, "Failed to write report: %s\n", strerror(errno));
+        /* ESHUTDOWN means USB host disconnected - this is normal, don't spam errors */
+        if (errno != ESHUTDOWN && errno != EAGAIN) {
+            fprintf(stderr, "Failed to write report: %s\n", strerror(errno));
+        }
         return -1;
     }
 
     return 0;
+}
+
+/* Wait for USB host to connect */
+static int wait_for_connection(void) {
+    switch_input_report_t test_report = {0};
+    test_report.lx = 128;
+    test_report.ly = 128;
+    test_report.rx = 128;
+    test_report.ry = 128;
+    test_report.hat = HAT_NEUTRAL;
+
+    printf("\nWaiting for USB host (Switch) to connect...\n");
+    printf("Please connect the USB cable to your Nintendo Switch now.\n\n");
+
+    int attempts = 0;
+    while (running) {
+        ssize_t written = write(hidg_fd, &test_report, SWITCH_INPUT_REPORT_SIZE);
+        if (written == SWITCH_INPUT_REPORT_SIZE) {
+            printf("USB host connected! Controller is ready.\n\n");
+            return 0;
+        }
+
+        /* ESHUTDOWN = not connected yet, keep waiting */
+        if (errno != ESHUTDOWN && errno != EAGAIN) {
+            fprintf(stderr, "Error waiting for connection: %s\n", strerror(errno));
+            return -1;
+        }
+
+        /* Show progress every 2 seconds */
+        if (++attempts % 20 == 0) {
+            printf("Still waiting... (%d seconds)\n", attempts / 10);
+        }
+
+        usleep(100000); /* 100ms */
+    }
+
+    return -1;
 }
 
 /* Signal handler */
@@ -336,8 +376,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("\nSwitch controller is ready!\n");
-    printf("Connect the Luckfox Pico Max to your Nintendo Switch via USB\n");
+    /* Wait for USB host (Switch) to connect */
+    if (wait_for_connection() < 0) {
+        close(hidg_fd);
+        cleanup_gadget();
+        return 1;
+    }
 
     /* Run demo */
     demo_controller();

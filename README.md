@@ -108,9 +108,11 @@ sudo ./cleanup.sh
 
 This will:
 1. Set up the USB gadget
-2. Connect to the Switch (plug in USB cable)
+2. Wait for you to connect the USB cable to the Switch
 3. Automatically press buttons and move sticks in a demo pattern
 4. Press Ctrl+C to stop
+
+**Important:** The program will wait for the Switch to connect before starting the demo. Make sure to plug in the USB cable when prompted!
 
 ### API Mode (Recommended)
 
@@ -287,6 +289,15 @@ Byte 7:   Vendor specific
 ```
 
 ## Troubleshooting
+
+### "Cannot send after transport endpoint shutdown"
+
+This error means the USB host (Switch) hasn't connected yet. The programs now automatically wait for the connection, so you should see a "Waiting for USB host..." message. Simply plug in the USB cable to your Switch when prompted.
+
+If you see this error while the program is running:
+- The Switch may have been disconnected or put to sleep
+- Try unplugging and re-plugging the USB cable
+- Restart the program
 
 ### Device or Resource Busy
 
