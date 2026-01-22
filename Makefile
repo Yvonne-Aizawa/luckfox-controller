@@ -1,8 +1,20 @@
 # Makefile for Switch Controller Emulator
 
-CC = gcc
+# For cross-compilation, set CROSS_COMPILE to your toolchain prefix
+# Examples:
+#   make CROSS_COMPILE=arm-linux-gnueabihf-
+#   make CROSS_COMPILE=aarch64-linux-gnu-
+#   make CROSS_COMPILE=/path/to/luckfox-sdk/tools/linux/toolchain/arm-rockchip830-linux-uclibcgnueabihf/bin/arm-rockchip830-linux-uclibcgnueabihf-
+#
+# For static linking (more portable): make STATIC=1
+
+CC = $(CROSS_COMPILE)gcc
 CFLAGS = -Wall -Wextra -O2 -std=gnu11
 LDFLAGS = -lpthread
+
+ifeq ($(STATIC),1)
+    LDFLAGS += -static
+endif
 
 TARGETS = switch_controller switch_controller_api client_example
 

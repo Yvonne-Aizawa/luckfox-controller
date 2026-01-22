@@ -31,8 +31,40 @@ This project implements a Nintendo Switch Pro Controller emulator using Linux US
 
 ## Building
 
+### Option 1: Cross-Compile on Your PC (Recommended)
+
+The Luckfox Pico Max uses an ARM processor, so cross-compilation on your PC is much faster than compiling on the device.
+
+**Using Luckfox SDK toolchain:**
+
 ```bash
-# Clone or download this repository
+# Set the path to your Luckfox SDK toolchain
+export CROSS_COMPILE=/path/to/luckfox-pico/tools/linux/toolchain/arm-rockchip830-linux-uclibcgnueabihf/bin/arm-rockchip830-linux-uclibcgnueabihf-
+
+# Build all programs
+make CROSS_COMPILE=$CROSS_COMPILE
+
+# Or build static binaries (more portable, no library dependencies)
+make CROSS_COMPILE=$CROSS_COMPILE STATIC=1
+```
+
+**Using standard ARM toolchain (Ubuntu/Debian):**
+
+```bash
+# Install cross-compiler
+sudo apt-get install gcc-arm-linux-gnueabihf
+
+# Build
+make CROSS_COMPILE=arm-linux-gnueabihf-
+
+# Transfer binaries to Luckfox
+scp switch_controller switch_controller_api client_example root@luckfox-ip:/root/
+```
+
+### Option 2: Build Directly on Luckfox (Slower)
+
+```bash
+# On the Luckfox Pico Max
 cd luckfox-controller
 
 # Build all programs
@@ -43,6 +75,8 @@ make switch_controller          # Demo mode
 make switch_controller_api      # API mode
 make client_example            # Example client
 ```
+
+**Note:** Building on the Luckfox is slower and may require installing build tools (gcc, make) if not already present.
 
 ## Setup
 
