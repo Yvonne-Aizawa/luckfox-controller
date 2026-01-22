@@ -41,6 +41,12 @@ DAEMON=/opt/switch_controller/switch_controller_api
 NAME=switch_controller
 PIDFILE=/var/run/$NAME.pid
 
+# Mount configfs if not already mounted
+if [ ! -d "/sys/kernel/config" ]; then
+    modprobe configfs 2>/dev/null || true
+    mount -t configfs none /sys/kernel/config 2>/dev/null || true
+fi
+
 # Load modules
 modprobe libcomposite 2>/dev/null || true
 modprobe usb_f_hid 2>/dev/null || true
@@ -50,7 +56,13 @@ case "$1" in
   start)
     echo "Starting $NAME..."
     # Cleanup any existing gadgets
-    echo "" > /sys/kernel/config/usb_gadget/*/UDC 2>/dev/null || true
+    if [ -d "/sys/kernel/config/usb_gadget" ]; then
+        for gadget in /sys/kernel/config/usb_gadget/*; do
+            if [ -f "$gadget/UDC" ]; then
+                echo "" > "$gadget/UDC" 2>/dev/null || true
+            fi
+        done
+    fi
     sleep 0.2
 
     # Start the daemon
@@ -64,7 +76,9 @@ case "$1" in
     rm -f $PIDFILE
 
     # Cleanup gadget
-    echo "" > /sys/kernel/config/usb_gadget/switch_controller/UDC 2>/dev/null || true
+    if [ -f "/sys/kernel/config/usb_gadget/switch_controller/UDC" ]; then
+        echo "" > /sys/kernel/config/usb_gadget/switch_controller/UDC 2>/dev/null || true
+    fi
     sleep 0.2
     echo "Stopped $NAME"
     ;;
